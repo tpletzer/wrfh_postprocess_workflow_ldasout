@@ -1,0 +1,6 @@
+file_dir: /nesi/nobackup/uoo03104/Taylor200_glac_update1_coldglac_alb/NWM/Dec
+save_dir: /nesi/nobackup/uoo03104/Taylor200_glac_update1_coldglac_alb/NWM/Dec
+station_names: [middle]
+plot_names: [precip, albedo, snowheight, icetemp, massbal, energybal, heatcontent, phasechange]
+
+
