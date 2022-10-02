@@ -18,7 +18,7 @@ def dataframe_to_datetime(d):
 
 
 
-def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Taylor200_glac_update1_2yrloop/DEC18', station_name: str='middle', plot_name: str='precip'):
+def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Taylor200_glac_update1_2yrloop/DEC18', station_name: str='cwg', plot_name: str='precip'):
     """
     Plot timeseries of modelled crocus energy balance
     

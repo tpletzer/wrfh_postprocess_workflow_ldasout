@@ -8,14 +8,14 @@ import numpy as np
 
 fid_dict = {
     'terminus': [227, 198],  #[i, j]
-    'middle': [219, 207],   # [217, 211],
+    'cwg': [219, 207],   # [217, 211],
     'highelv': [209, 220],
     'soil': [208, 195],
     }
 
 
 def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hydroCrocus_mahuika/Taylor200_glac_update1_2yrloop/NWM', 
-    save_dir: str='/nesi/project/uoo03104/snakemake_output/Taylor200_glac_update1_2yrloop/DEC18', station_name: str='soil'): 
+    save_dir: str='/nesi/project/uoo03104/snakemake_output/Taylor200_glac_update1_2yrloop/DEC18', station_name: str='cwg'): 
     
     files = glob.glob(f'{file_dir}/*LDASOUT*')
     files = sorted(files)
