@@ -24,15 +24,15 @@ rule produceStationData:
     input:
         NC_FILES,
     output:
-        "{SAVE_DIR}/timeseries_ldasout_middle.csv"
+        "{SAVE_DIR}/timeseries_ldasout_cwg.csv"
     shell:
-        "python generate_timeseries_ldasout.py -f {FILE_DIR} --save-dir={SAVE_DIR} --station-name=middle"
+        "python generate_timeseries_ldasout.py -f {FILE_DIR} --save-dir={SAVE_DIR} --station-name=cwg"
 
 rule createTimeseriesPlot:
     input:
-        "{SAVE_DIR}/timeseries_ldasout_middle.csv"
+        "{SAVE_DIR}/timeseries_ldasout_cwg.csv"
     output:
-        report("{SAVE_DIR}/timeseries_{pname}_middle.png", category="timeseries plot")
+        report("{SAVE_DIR}/timeseries_{pname}_cwg.png", category="timeseries plot")
     shell:
-        "python plot_timeseries_energybal.py --save-dir={SAVE_DIR} --station-name=middle --plot-name={wildcards.pname}"
+        "python plot_timeseries_energybal.py --save-dir={SAVE_DIR} --station-name=cwg --plot-name={wildcards.pname}"
 

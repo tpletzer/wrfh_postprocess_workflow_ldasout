@@ -205,7 +205,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
 #------------------- scripts to generate xsections, vert profiles etc
 
-    if plot_name=='icetD'
+    if plot_name=='icetD':
 
         df_snowh, df_dz, df_var = prep.proc_xsection()
 
@@ -237,7 +237,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         dt.plot()
         plt.savefig(f'{save_dir}/timeseries_icetD_{station_name}.png')
 
-    if plot_name=='icetH'
+    if plot_name=='icetH':
 
         df_snowh, df_dz, df_var = prep.proc_xsection()
 
@@ -267,6 +267,32 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.figure()
         dt.plot()
         plt.savefig(f'{save_dir}/timeseries_icetH_{station_name}.png')
+
+    if plot_name=='flow':
+        df = prep.preprocess_flow(save_dir)
+
+        ftsize=14
+        fig, axs = plt.subplots(4, 1, sharex=True, figsize=(18,14))
+        fig.suptitle('Runoff at CWG', fontsize=ftsize)
+
+        axs[0].plot(df.index, df["PSNOWTHRUFAL"], color='blue', label="PTHRUFAL")
+        axs[0].legend(loc='upper right')
+        axs[1].plot(df.index, df["PSNOWTHRUFAL"].cumsum(), color='blue', label="PTHRUFAL_acc")
+        axs[1].legend(loc='upper right')
+        axs[2].plot(df.index, df["FLOW_ICE"], color='green', label="FLOW_ICE")
+        axs[2].legend(loc='upper right')
+        axs[3].plot(df.index, df["FLOW_SNOW"], color='orange', label="FLOW_SNOW")
+        axs[3].legend(loc='upper right')
+
+        my_xticks = []
+        for i in df.index.values:
+            my_xticks.append(i)
+        my_xticks2 = [re.sub(r'\:00\:00\.0+$', '', str(d)) for d in my_xticks]
+
+        plt.xticks(rotation=45)
+        plt.subplots_adjust(top=0.925, bottom=0.12, left=0.085, right=0.9)
+        fig.supylabel('Runoff (mm)')
+        plt.savefig(f'{save_dir}/timeseries_flow_{station_name}.png')
 
     plt.close(plt.figure())
 

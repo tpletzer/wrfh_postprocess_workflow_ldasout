@@ -7,7 +7,7 @@ import sys
 sys.path.insert(1, '/nesi/project/uoo03104/.conda/envs/xesmf_stable_env/lib/python3.7/site-packages/cmcrameri/')
 import cm
 
-def proc_xsection(file_dir='.', dom='top', station_name='middle', var_name="PSNOWTEMP"):
+def proc_xsection(file_dir='.', station_name='cwg', var_name="PSNOWTEMP"):
     #df = pd.read_csv(f'{file_dir}/{station_name}_restart.csv', index_col=0)
     df = pd.read_csv(f'{file_dir}/timeseries_ldasout_{station_name}.csv', index_col=0)
     df.index = pd.to_datetime(df.index)
@@ -30,7 +30,7 @@ def proc_xsection(file_dir='.', dom='top', station_name='middle', var_name="PSNO
 
 
 
-def preprocess_flow(save_dir='./', station_name='middle'):
+def preprocess_flow(save_dir='./', station_name='cwg'):
     df = pd.read_csv(f'{save_dir}/timeseries_ldasout_{station_name}.csv', index_col=0)
     df.index = pd.to_datetime(df.index)
 
@@ -39,7 +39,7 @@ def preprocess_flow(save_dir='./', station_name='middle'):
     return df
 
 
-def proc_4panel(date="2016-12-01 00:00:00+00:00", save_dir='./', station_name='middle'):
+def proc_4panel(date="2016-12-01 00:00:00+00:00", save_dir='./', station_name='cwg'):
     df = pd.read_csv(f'{save_dir}/timeseries_ldasout_{station_name}.csv', index_col=0)
     df.index = pd.to_datetime(df.index)
     df_dz = df.filter(regex=r"PSNOWDZ")
