@@ -380,7 +380,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.title(f'Cross Section of the changes in {var_name} for a pixel')
         plt.xlabel('Datetime')
         plt.ylabel('Height (m)')
-        plt.savefig(f'{save_dir}/timeseries_xsect_top_{station_name}.png')
+        plt.savefig(f'{save_dir}/timeseries_xsect_top_{station_name}.png', bbox_inches='tight')
     plt.close(plt.figure())
 
 if __name__ == "__main__":
