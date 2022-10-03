@@ -9,6 +9,7 @@ import sys
 sys.path.insert(1, '/nesi/project/uoo03104/.conda/envs/xesmf_stable_env/lib/python3.7/site-packages/cmcrameri/')
 import cm
 #add .plot(cmap=cm.hawaii) for cb friendly
+import preprocess_xsect.py as prep
 
 def dataframe_to_datetime(d):
     d['Datetime'] = pd.to_datetime(d['date'] + ' ' + d['hour'])
@@ -201,6 +202,71 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.ylabel('Phase change (W/m2)')
         plt.legend(loc='upper right')
         plt.savefig(f'{save_dir}/timeseries_phasechange_{station_name}.png')
+
+#------------------- scripts to generate xsections, vert profiles etc
+
+    if plot_name=='icetD'
+
+        df_snowh, df_dz, df_var = prep.proc_xsection()
+
+        
+        #calculate each of the heights for each timestep
+        z_005 = df_snowh -0.05
+        z_010 = df_snowh -0.1
+        z_020 = df_snowh -0.2
+        z_050 = df_snowh -0.5
+        z_100 = df_snowh -1.0
+        z_200 = df_snowh -2.0
+
+        dt = pd.DataFrame(columns=["0.05", "0.1", "0.2", "0.5", "1.0", "2.0"], index=z_005.index)
+
+        for i in range(len(z_005)):
+            # print(z_005.iloc[i]) #target to interp to
+            f = interpolate.interp1d(df_dz.iloc[i].values, df_var.iloc[i].values, bounds_error=False)
+            t_005 = f(z_005.iloc[i])
+            t_010 = f(z_010.iloc[i])
+            t_020 = f(z_020.iloc[i])
+            t_050 = f(z_050.iloc[i])
+            t_100 = f(z_100.iloc[i])
+            t_200 = f(z_200.iloc[i])
+            dt.iloc[i] = pd.Series({'0.05':t_005, '0.1':t_010, '0.2':t_020, '0.5':t_050, '1.0':t_100, '2.0':t_200}, dtype=np.float64)
+
+        dt = dt.astype(np.float64)
+        dt.resample('d').mean()
+        plt.figure()
+        dt.plot()
+        plt.savefig(f'{save_dir}/timeseries_icetD_{station_name}.png')
+
+    if plot_name=='icetH'
+
+        df_snowh, df_dz, df_var = prep.proc_xsection()
+
+        
+        #calculate each of the heights for each timestep
+        z_005 = df_snowh -0.05
+        z_010 = df_snowh -0.1
+        z_020 = df_snowh -0.2
+        z_050 = df_snowh -0.5
+        z_100 = df_snowh -1.0
+        z_200 = df_snowh -2.0
+
+        dt = pd.DataFrame(columns=["0.05", "0.1", "0.2", "0.5", "1.0", "2.0"], index=z_005.index)
+
+        for i in range(len(z_005)):
+            # print(z_005.iloc[i]) #target to interp to
+            f = interpolate.interp1d(df_dz.iloc[i].values, df_var.iloc[i].values, bounds_error=False)
+            t_005 = f(z_005.iloc[i])
+            t_010 = f(z_010.iloc[i])
+            t_020 = f(z_020.iloc[i])
+            t_050 = f(z_050.iloc[i])
+            t_100 = f(z_100.iloc[i])
+            t_200 = f(z_200.iloc[i])
+            dt.iloc[i] = pd.Series({'0.05':t_005, '0.1':t_010, '0.2':t_020, '0.5':t_050, '1.0':t_100, '2.0':t_200}, dtype=np.float64)
+
+        dt = dt.astype(np.float64)
+        plt.figure()
+        dt.plot()
+        plt.savefig(f'{save_dir}/timeseries_icetH_{station_name}.png')
 
     plt.close(plt.figure())
 
