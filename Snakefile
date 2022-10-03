@@ -8,6 +8,7 @@ FILE_DIR = config['file_dir']
 SAVE_DIR = config['save_dir']
 STATION_NAMES = config['station_names'] 
 PLOT_NAMES = config['plot_names']
+D_ATE = config['date']
 
 NC_FILES = glob.glob(f"{FILE_DIR}/*LDASOUT*")
 
@@ -34,5 +35,5 @@ rule createTimeseriesPlot:
     output:
         report("{SAVE_DIR}/timeseries_{pname}_{STATION_NAMES}.png", category="timeseries plot")
     shell:
-        "python plot_timeseries_energybal.py --save-dir={SAVE_DIR} --station-name={STATION_NAMES} --plot-name={wildcards.pname}"
+        "python plot_timeseries_energybal.py --save-dir={SAVE_DIR} --station-name={STATION_NAMES} --plot-name={wildcards.pname} --date={D_ATE}"
 

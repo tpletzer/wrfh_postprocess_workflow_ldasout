@@ -20,7 +20,7 @@ def dataframe_to_datetime(d):
 
 
 
-def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Taylor200_glac_update1_2yrloop/DEC18', station_name: str='cwg', plot_name: str='precip'):
+def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Taylor200_glac_update1_2yrloop/DEC18', station_name: str='cwg', plot_name: str='precip', date: str='2018-12-01 04:00:00'):
     """
     Plot timeseries of modelled crocus energy balance
     
@@ -293,6 +293,28 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.subplots_adjust(top=0.925, bottom=0.12, left=0.085, right=0.9)
         fig.supylabel('Runoff (mm)')
         plt.savefig(f'{save_dir}/timeseries_flow_{station_name}.png')
+
+    if plot_name=='4panel':
+        height,temp,heat,rho,liq, thruf, fsno, fice,melt,refrz = prep.proc_4panel(date, save_dir, station_name)
+        fig, axs = plt.subplots(2, 2)
+        fig.suptitle(date)
+        fig.text(0.04, 0.5, 'Height (m)', va='center', rotation='vertical')
+        axs[0, 0].plot(temp, height)
+        axs[0, 0].axvline(x=273.15, color='k', linestyle='dotted', label='XTT')
+        axs[0,0].legend(loc='upper right')
+        axs[0, 0].set_xlabel('PSNOWTEMP (K)')
+        axs[0, 1].plot(rho, height, 'tab:orange')
+        axs[0, 1].set_xlabel('PSNOWRHO (kg/m3)')
+        axs[0, 1].axvline(x=850., color='k', linestyle='dotted', label='XRHOTHRESHOLD')
+        axs[0,1].legend(loc='upper right')
+        axs[1, 0].plot(liq, height, 'tab:green',label='liq')
+        axs[1, 0].plot(melt, height, 'tab:red',label='melt')
+        axs[1, 0].plot(refrz, height, 'tab:blue',label='refrz')
+        axs[1,0].legend(loc='upper right')
+        axs[1, 0].set_xlabel('PSNOWLIQ (kg/m3)')
+        axs[1, 1].plot(heat, height, 'tab:red')
+        axs[1, 1].set_xlabel('PSNOWHEAT (J/m2)')
+        plt.savefig(f'{save_dir}/timeseries_4panel_{station_name}.png')
 
     plt.close(plt.figure())
 

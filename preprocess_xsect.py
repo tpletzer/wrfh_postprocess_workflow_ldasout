@@ -47,13 +47,16 @@ def proc_4panel(date="2016-12-01 00:00:00+00:00", save_dir='./', station_name='c
     df_liq = df.filter(regex=r"PSNOWLIQ")
     df_rho = df.filter(regex=r"PSNOWRHO")
     df_heat = df.filter(regex=r"PSNOWHEAT")
-
+    df_melt = df.filter(regex=r"PSNOWMELT")
+    df_refrz = df.filter(regex=r"PSNOWREFRZ")
 
     df_dz[df_dz==0.]=np.nan
     df_temp[df_temp==0.]=np.nan
     df_heat[df_heat==0.]=np.nan
     df_rho[df_rho==999.]=np.nan
     df_liq[df_liq==0.]=np.nan
+    df_melt[df_melt==0.]=np.nan
+    df_refrz[df_refrz==0.]=np.nan
 
     #nan_index = np.argwhere(np.isnan(z_real))[0][0]
     #df_liq.where(np.isnan(df_dz)
@@ -74,6 +77,8 @@ def proc_4panel(date="2016-12-01 00:00:00+00:00", save_dir='./', station_name='c
     heat = df_heat.loc[date].values
     rho = df_rho.loc[date].values
     liq = df_liq.loc[date].values
+    melt = df_melt.loc[date].values
+    refrz = df_refrz.loc[date].values
 
     thruf = df["PSNOWTHRUFAL"][date]
     fsno = df["FLOW_SNOW"][date]
@@ -81,4 +86,4 @@ def proc_4panel(date="2016-12-01 00:00:00+00:00", save_dir='./', station_name='c
 
     print(f'{save_dir}: PSNOWTHRUFAL={thruf}, FLOW_SNOW={fsno}, FLOW_ICE={fice}')
 
-    return height,temp,heat,rho,liq, thruf, fsno, fice
+    return height,temp,heat,rho,liq, thruf, fsno, fice, melt, refrz
