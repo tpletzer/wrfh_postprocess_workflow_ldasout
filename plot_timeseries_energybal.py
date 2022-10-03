@@ -316,6 +316,71 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         axs[1, 1].set_xlabel('PSNOWHEAT (J/m2)')
         plt.savefig(f'{save_dir}/timeseries_4panel_{station_name}.png')
 
+    if plot_name=='xsect_top':
+        var_name="PSNOWTEMP"
+        df_snowh, df_dz, df_var = prep.proc_xsection(save_dir)
+        z = np.arange(df_snowh.values.max() - 0.5, df_snowh.values.max(), 0.01)
+        z = np.append(np.arange(df_snowh.values.max() - 3.5, df_snowh.values.max() - 0.5, 0.5), z)
+        #z = np.append(np.arange(49.9, df_snowh.values.max(), 0.0001), z)
+        z.sort()
+        z_rev = z
+
+        dt = pd.DataFrame(columns=["depths", "var"], index=df_dz.index)
+        dt2 = pd.DataFrame(columns=z_rev, index=df_dz.index)
+
+        for index, row in df_dz.iterrows(): #iterating over all of the timesteps
+            z_real = df_dz.loc[index].to_list() #extract the depth
+            #find index of the first element isnan
+            try:
+                nan_index = np.argwhere(np.isnan(z_real))[0][0]
+            except IndexError:
+                nan_index = -1 #this only happens when init run
+            #interp wants monotonically increasing z_real and no NaNs
+            z_real_rev = z_real[0:nan_index]
+            z_real_rev.reverse()
+            t_real_rev = df_var.loc[index][0:nan_index].to_list()
+            t_real_rev.reverse() #reverse is an in place operation
+
+            f = interpolate.interp1d(z_real_rev, t_real_rev, bounds_error=False)
+            t = f(z_rev)
+            #t = np.interp(z_rev, z_real_rev, t_real_rev)
+            dt.loc[index] = pd.Series({'depths':z_rev, 'var':t})
+            for ind in range(len(t)):
+                dt2.loc[index][z_rev[ind]] = t[ind]
+        
+        data=dt2
+        var_dict = {
+        'PSNOWTEMP': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index), "Temperature", "K"],  #[levels, cmap, nbins, label, unit]
+        'PSNOWRHO': [np.arange(data.min().min(), data.max().max(), 0.5), cm.hawaii, 744/24, "Density", "kg/m3"],
+        'PSNOWLIQ': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index), "Liquid content", "mmwe"],
+        'PSNOWHEAT': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index), "Heat content", "J/m2"],
+        }
+        x_vals = np.linspace(0, len(data.index), len(data.index), dtype=int)
+        y_vals = z_rev
+        # y_vals = np.linspace(0, len(z), len(z), dtype=int)
+        X, Y = np.meshgrid(x_vals, y_vals, indexing='ij')
+        Z = data.values
+        
+        my_xticks = []
+        for i in data.index.values:
+            my_xticks.append(i)
+        my_xticks2 = [re.sub(r'\:00\:00\.0+$', '', str(d)) for d in my_xticks]
+
+        plt.figure(figsize=(10,6))
+        plt.tight_layout()
+        plt.subplots_adjust(bottom=0.3)
+        #plt.yticks(list(range(0,len(z),1)), z)
+        plt.xticks(list(range(0,len(data.index),1)), my_xticks2, rotation=45)
+        cp = plt.contourf(X, Y, Z, cmap=var_dict[var_name][1], levels=var_dict[var_name][0])
+        plt.colorbar(cp, label=f'{var_dict[var_name][3]} of snow ({var_dict[var_name][4]})')
+        plt.plot(X, df_snowh.values, '-k', linewidth=0.1)
+        n=var_dict[var_name][2]
+        plt.locator_params(axis='x', nbins=n)
+
+        plt.title(f'Cross Section of the changes in {var_name} for a pixel')
+        plt.xlabel('Datetime')
+        plt.ylabel('Height (m)')
+        plt.savefig(f'{save_dir}/timeseries_xsect_top_{station_name}.png')
     plt.close(plt.figure())
 
 if __name__ == "__main__":

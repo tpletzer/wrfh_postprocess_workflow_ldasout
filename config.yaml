@@ -1,5 +1,5 @@
 file_dir: /nesi/project/uoo03104/code/wrf_hydro_nwm_Croc_test/test_printbal/NWM/DEC
 save_dir: /nesi/project/uoo03104/code/wrf_hydro_nwm_Croc_test/test_printbal/NWM/DEC
 station_names: cwg
-plot_names: [precip, albedo, snowheight, massbal, energybal, icetD, icetH, flow, 4panel]
+plot_names: [precip, albedo, snowheight, massbal, energybal, icetD, icetH, flow, 4panel, xsect_top]
 date: 2018-12-01\ 04:00:00

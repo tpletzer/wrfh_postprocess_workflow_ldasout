@@ -24,7 +24,15 @@ def proc_xsection(file_dir='.', station_name='cwg', var_name="PSNOWTEMP"):
     d["PSNOWDZ0"] = df_snowh + d["PSNOWDZ0"]
     df_dz = d.cumsum(axis=1)
     df_dz = df_dz + df.filter(regex=r"PSNOWDZ")
-
+    
+    try:
+        np.argwhere(np.isnan(df_dz.iloc[0].values))[0][0]
+    except IndexError: #if its the init run
+        drop_time = df_dz.iloc[0].name
+        df_dz.drop([drop_time], axis=0, inplace=True)
+        df_snowh.drop([drop_time], axis=0, inplace=True)
+        df_var.drop([drop_time], axis=0, inplace=True)
+   
     return df_snowh, df_dz, df_var
 
 
