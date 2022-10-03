@@ -1,6 +1,5 @@
-file_dir: /nesi/nobackup/uoo03104/Taylor200_glac_update1_coldglac_alb/NWM/Dec
-save_dir: /nesi/nobackup/uoo03104/Taylor200_glac_update1_coldglac_alb/NWM/Dec
-station_names: [cwg]
-plot_names: [precip, albedo, snowheight, massbal, energybal, icetD, icetH]
-
+file_dir: /nesi/project/uoo03104/code/wrf_hydro_nwm_Croc_test/test_printbal/NWM/DEC
+save_dir: /nesi/project/uoo03104/code/wrf_hydro_nwm_Croc_test/test_printbal/NWM/DEC
+station_names: cwg
+plot_names: [precip, albedo, snowheight, massbal, energybal, icetD, icetH, flow]
 

@@ -9,7 +9,7 @@ import sys
 sys.path.insert(1, '/nesi/project/uoo03104/.conda/envs/xesmf_stable_env/lib/python3.7/site-packages/cmcrameri/')
 import cm
 #add .plot(cmap=cm.hawaii) for cb friendly
-import preprocess_xsect.py as prep
+import preprocess_xsect as prep
 
 def dataframe_to_datetime(d):
     d['Datetime'] = pd.to_datetime(d['date'] + ' ' + d['hour'])
@@ -207,7 +207,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
     if plot_name=='icetD':
 
-        df_snowh, df_dz, df_var = prep.proc_xsection()
+        df_snowh, df_dz, df_var = prep.proc_xsection(save_dir)
 
         
         #calculate each of the heights for each timestep
@@ -232,14 +232,14 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
             dt.iloc[i] = pd.Series({'0.05':t_005, '0.1':t_010, '0.2':t_020, '0.5':t_050, '1.0':t_100, '2.0':t_200}, dtype=np.float64)
 
         dt = dt.astype(np.float64)
-        dt.resample('d').mean()
+        dt = dt.resample('d').mean()
         plt.figure()
         dt.plot()
         plt.savefig(f'{save_dir}/timeseries_icetD_{station_name}.png')
 
     if plot_name=='icetH':
 
-        df_snowh, df_dz, df_var = prep.proc_xsection()
+        df_snowh, df_dz, df_var = prep.proc_xsection(save_dir)
 
         
         #calculate each of the heights for each timestep

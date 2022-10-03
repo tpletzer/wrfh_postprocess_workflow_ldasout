@@ -68,7 +68,8 @@ def proc_4panel(date="2016-12-01 00:00:00+00:00", save_dir='./', station_name='c
 
     # height = df_dz.loc[date].values
     #height = np.linspace(0, 39, 40, dtype=int)
-    height = np.linspace(0, 29, 30, dtype=int)
+    
+    height = np.linspace(0, len(df_temp.columns) - 1, len(df_temp.columns), dtype=int)
     temp = df_temp.loc[date].values
     heat = df_heat.loc[date].values
     rho = df_rho.loc[date].values
