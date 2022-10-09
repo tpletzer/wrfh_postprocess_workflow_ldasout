@@ -166,17 +166,17 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
 
     if plot_name=='energybal':
-        plt.figure(figsize=[9.0, 5.0])
-        df["qm"].plot(label="residual")
-        df["FSA"].plot(label="net shortwave radiation")
-        df["FIRA"].plot(label="net longwave radiation")
-        df["LH"].plot(label="latent heat flux")
-        df["HFX"].plot(label="sensible heat flux")
-        df["GRDFLX"].plot(label="ground flux")
-        df_rph.plot(label="refreezing")
-        df_mph.plot(label="melt")
-        df_swp.plot(label="SW penetrative radiation")
-        df_sum["HEATCONTENT"].plot(label="heat content")
+        plt.figure(figsize=[12, 8])
+        df["qm"].plot(label="residual", linewidth=0.5)
+        df["FSA"].plot(label="net shortwave radiation", linewidth=0.5)
+        df["FIRA"].plot(label="net longwave radiation", linewidth=0.5)
+        df["LH"].plot(label="latent heat flux", linewidth=0.7)
+        df["HFX"].plot(label="sensible heat flux", linewidth=0.7)
+        df["GRDFLX"].plot(label="ground flux", linewidth=0.7)
+        df_rph.plot(label="refreezing", linewidth=0.7)
+        df_mph.plot(label="melt", linewidth=0.7)
+        df_swp.plot(label="SW penetrative radiation", linewidth=0.7)
+        df_sum["HEATCONTENT"].plot(label="heat content", linewidth=0.7)
         #df_sum["PHASECHANGE"].plot(label="phase change")
 
         #df.plot(linewidth=0.7)
@@ -186,6 +186,18 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.legend(loc='upper right')
         plt.ylim([-300., 450.])
         plt.savefig(f'{save_dir}/timeseries_energybal_{station_name}.png')
+
+    if plot_name=='melt':
+        plt.figure(figsize=[12, 8])
+        df_rph.plot(label="refreezing", linewidth=0.7)
+        df_mph.plot(label="melt", linewidth=0.7)
+        df_swp.plot(label="SW penetrative radiation", linewidth=0.7)
+        plt.title(f'Energy balance components for {station_name}',fontsize=18)
+        plt.ylabel('Energy (W/m2)', fontsize=14)
+        plt.xlabel(f'Datetime (UTC)')
+        plt.legend(loc='upper right')
+        #plt.ylim([-300., 450.])
+        plt.savefig(f'{save_dir}/timeseries_melt_{station_name}.png')
     
     if plot_name=='heatcontent':
         plt.figure()
@@ -263,10 +275,40 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
             t_200 = f(z_200.iloc[i])
             dt.iloc[i] = pd.Series({'0.05':t_005, '0.1':t_010, '0.2':t_020, '0.5':t_050, '1.0':t_100, '2.0':t_200}, dtype=np.float64)
 
+        c = pd.read_csv('/nesi/nobackup/uoo03104/validation_data/long_aws_cwg.csv',delimiter=',',sep='\t', header=0, skiprows=[0,2,3])
+        c = c.set_index('TIMESTAMP')
+        c.index = pd.to_datetime(c.index)
+        c.index = c.index.tz_localize('Antarctica/Mcmurdo').tz_convert('UTC')
+        c = c.astype(float)
         dt = dt.astype(np.float64)
-        plt.figure()
-        dt.plot()
+        dt = dt-273.15
+
+
+        plt.figure(figsize=(12,8))
+        c["TC1_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.05_ob', color='red', linestyle='dotted')
+        c["TC2_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.1_ob', color='orange', linestyle='dotted')
+        c["TC3_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.2_ob', color='yellow', linestyle='dotted')
+        c["TC4_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.5_ob', color='green', linestyle='dotted')
+        c["TC5_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='1.0_ob', color='blue', linestyle='dotted')
+        c["TC6_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='2.0_ob', color='brown', linestyle='dotted')
+        dt["0.05"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.05_Croc', color='red')
+        dt["0.1"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.1_Croc', color='orange')
+        dt["0.2"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.2_Croc', color='yellow')
+        dt["0.5"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.5_Croc', color='green')
+        dt["1.0"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='1.0_Croc', color='blue')
+        dt["2.0"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='2.0_Croc', color='brown')
+        plt.axhline(y=0.0, color='k', linestyle='dotted', label='XTT')
+        plt.title('Glacier Temperature')
+        plt.ylabel('T(K)')
+        plt.legend(loc='upper left')
         plt.savefig(f'{save_dir}/timeseries_icetH_{station_name}.png')
+        #plt.show()
+
+
+        #dt = dt.astype(np.float64)
+        #plt.figure()
+        #dt.plot()
+        #plt.savefig(f'{save_dir}/timeseries_icetH_{station_name}.png')
 
     if plot_name=='flow':
         df = prep.preprocess_flow(save_dir)
@@ -300,6 +342,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         fig.suptitle(date)
         fig.text(0.04, 0.5, 'Height (m)', va='center', rotation='vertical')
         axs[0, 0].plot(temp, height)
+        axs[0, 0].invert_yaxis() 
         axs[0, 0].axvline(x=273.15, color='k', linestyle='dotted', label='XTT')
         axs[0,0].legend(loc='upper right')
         axs[0, 0].set_xlabel('PSNOWTEMP (K)')
@@ -307,13 +350,16 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         axs[0, 1].set_xlabel('PSNOWRHO (kg/m3)')
         axs[0, 1].axvline(x=850., color='k', linestyle='dotted', label='XRHOTHRESHOLD')
         axs[0,1].legend(loc='upper right')
+        axs[0, 1].invert_yaxis()
         axs[1, 0].plot(liq, height, 'tab:green',label='liq')
         axs[1, 0].plot(melt, height, 'tab:red',label='melt')
         axs[1, 0].plot(refrz, height, 'tab:blue',label='refrz')
         axs[1,0].legend(loc='upper right')
         axs[1, 0].set_xlabel('PSNOWLIQ (kg/m3)')
+        axs[1, 0].invert_yaxis()
         axs[1, 1].plot(heat, height, 'tab:red')
         axs[1, 1].set_xlabel('PSNOWHEAT (J/m2)')
+        axs[1, 1].invert_yaxis()
         plt.savefig(f'{save_dir}/timeseries_4panel_{station_name}.png')
 
     if plot_name=='xsect_top':
@@ -350,10 +396,10 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         
         data=dt2
         var_dict = {
-        'PSNOWTEMP': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index), "Temperature", "K"],  #[levels, cmap, nbins, label, unit]
-        'PSNOWRHO': [np.arange(data.min().min(), data.max().max(), 0.5), cm.hawaii, 744/24, "Density", "kg/m3"],
-        'PSNOWLIQ': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index), "Liquid content", "mmwe"],
-        'PSNOWHEAT': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index), "Heat content", "J/m2"],
+        'PSNOWTEMP': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Temperature", "K"],  #[levels, cmap, nbins, label, unit]
+        'PSNOWRHO': [np.arange(data.min().min(), data.max().max(), 0.5), cm.hawaii, len(data.index)/240, "Density", "kg/m3"],
+        'PSNOWLIQ': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Liquid content", "mmwe"],
+        'PSNOWHEAT': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Heat content", "J/m2"],
         }
         x_vals = np.linspace(0, len(data.index), len(data.index), dtype=int)
         y_vals = z_rev
