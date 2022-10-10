@@ -10,7 +10,7 @@ sys.path.insert(1, '/nesi/project/uoo03104/.conda/envs/xesmf_stable_env/lib/pyth
 import cm
 #add .plot(cmap=cm.hawaii) for cb friendly
 import preprocess_xsect as prep
-
+#warnings.filterwarnings('ignore')
 def dataframe_to_datetime(d):
     d['Datetime'] = pd.to_datetime(d['date'] + ' ' + d['hour'])
     d = d.set_index('Datetime')
@@ -42,11 +42,34 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
     cohm_aws = cohm_aws.loc[cohm_aws.index <= '2019-01-01 12:00:00', :]
     cohm_aws.index = cohm_aws.index.tz_localize('Antarctica/Mcmurdo').tz_convert('UTC')
 
+    c = pd.read_csv('/nesi/nobackup/uoo03104/validation_data/long_aws_cwg.csv',delimiter=',',sep='\t', header=0, skiprows=[0,2,3])
+    c = c.set_index('TIMESTAMP')
+    c.index = pd.to_datetime(c.index)
+    c.index = c.index.tz_localize('Antarctica/Mcmurdo').tz_convert('UTC')
+    c = c.astype(float)
+    hsnow = pd.DataFrame()
+    hsnow["SR50T"] = -1*c["SR50T_Avg"].loc[c.index >= '2021-12-01 13:00:00']
+    hsnow["hsnow"] = hsnow["SR50T"] - hsnow["SR50T"][0]
+
+    #precip = hsnow["hsnow"].diff()
+    time_mask = (hsnow.index.hour == 00) & (hsnow.index.minute == 00) #filter each day
+    precip = hsnow[time_mask].diff()["hsnow"] #daily diff in sfc height
+    precip[precip < 0.] = 0.
+    precip = precip *100. #convert to swe using 250kg/m3 density
+    precip = precip.resample('H').ffill()
+    
+    SWin = c["incommingSW_Avg"].resample('D').sum()
+    SWout = c["outgoingSW_Avg"].resample('D').sum()
+    Alb = SWout/SWin
+    Alb = Alb.resample('H').ffill()
+
 
     df = pd.read_csv(f'{save_dir}/timeseries_ldasout_{station_name}.csv', index_col=0)
     df.index = pd.to_datetime(df.index)
     df.index = df.index.tz_localize('UTC')
-    df["SNOWH_scaled"] = df["SNOWH"] - df["SNOWH"][0]
+    hsnow_m = pd.DataFrame()
+    hsnow_m["SNOWH"] = df["SNOWH"].loc[df.index>='2021-12-01 13:00:00']
+    hsnow_m["SNOWH_scaled"] = hsnow_m["SNOWH"] - hsnow_m["SNOWH"][0]
 
     df["ACCPRCP_scaled"] = df["ACCPRCP"] - df["ACCPRCP"][0]
     df["ACSNOM_scaled"] = df["ACSNOM"] - df["ACSNOM"][0]
@@ -66,8 +89,9 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
     if plot_name=='precip':
         plt.figure()
-        cohm["precip(obs,mmwe)"].plot(label='obs')
-        df["ACCPRCP"].plot(label='model')
+        precip.plot(label='obs')
+        #cohm["precip(obs,mmwe)"].plot(label='obs')
+        df["ACCPRCP"].loc[df.index >= '2021-12-01 13:00:00'].plot(label='model')
         plt.title('precip')
         plt.ylabel('precip (mmwe)')
         plt.legend(loc='upper right')
@@ -76,8 +100,9 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
     if plot_name=='albedo':
         plt.figure()
-        cohm_aws["Albedo(obs,-)"].plot(label='obs')
-        df["ALBEDO"].plot(label='model')
+        Alb.loc[Alb.index >= '2021-12-02 00:00:00'].plot(label='obs')
+        #cohm_aws["Albedo(obs,-)"].plot(label='obs')
+        df["ALBEDO"].loc[df.index >= '2021-12-01 13:00:00'].plot(label='model')
         plt.title('Albedo')
         plt.ylabel('Albedo')
         plt.legend(loc='upper right')
@@ -86,8 +111,9 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
     if plot_name=='snowheight':
         plt.figure()
-        cohm["hsnow(obs,m)_scaled"].plot(label='obs')
-        df["SNOWH_scaled"].plot(label='model')
+        hsnow["hsnow"].plot(label='obs')
+        #cohm["hsnow(obs,m)_scaled"].plot(label='obs')
+        hsnow_m["SNOWH_scaled"].plot(label='model')
         plt.title('Surface height')
         plt.ylabel('snowh (mm)')
         plt.legend(loc='upper right')
@@ -275,14 +301,12 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
             t_200 = f(z_200.iloc[i])
             dt.iloc[i] = pd.Series({'0.05':t_005, '0.1':t_010, '0.2':t_020, '0.5':t_050, '1.0':t_100, '2.0':t_200}, dtype=np.float64)
 
-        c = pd.read_csv('/nesi/nobackup/uoo03104/validation_data/long_aws_cwg.csv',delimiter=',',sep='\t', header=0, skiprows=[0,2,3])
-        c = c.set_index('TIMESTAMP')
-        c.index = pd.to_datetime(c.index)
-        c.index = c.index.tz_localize('Antarctica/Mcmurdo').tz_convert('UTC')
-        c = c.astype(float)
         dt = dt.astype(np.float64)
         dt = dt-273.15
 
+        c["TC5_Avg"].loc["2021-12-15 18:00:00":"2021-12-16 19:30:00"] = c["TC5_Avg"].loc["2021-12-15 18:00:00":"2021-12-16 19:30:00"].where(c["TC5_Avg"]<-8.7, np.nan) #filter out weird meltwater spike
+        melt_index = np.argwhere( c["TC1_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].values>0.0)[0][0] #index where TC1 melts out
+        c["TC1_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"][melt_index:] = np.nan       
 
         plt.figure(figsize=(12,8))
         c["TC1_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.05_ob', color='red', linestyle='dotted')
@@ -396,10 +420,10 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         
         data=dt2
         var_dict = {
-        'PSNOWTEMP': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Temperature", "K"],  #[levels, cmap, nbins, label, unit]
-        'PSNOWRHO': [np.arange(data.min().min(), data.max().max(), 0.5), cm.hawaii, len(data.index)/240, "Density", "kg/m3"],
-        'PSNOWLIQ': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Liquid content", "mmwe"],
-        'PSNOWHEAT': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Heat content", "J/m2"],
+        'PSNOWTEMP': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Temperature", "K", [273.15]],  #[levels, cmap, nbins, label, unit]
+        'PSNOWRHO': [np.arange(data.min().min(), data.max().max(), 0.5), cm.hawaii, len(data.index)/240, "Density", "kg/m3", [850]],
+        'PSNOWLIQ': [np.arange(data.min().min(), data.max().max(), 0.5), cm.vik, len(data.index)/240, "Liquid content", "mmwe", [0]],
+        'PSNOWHEAT': [np.arange(data.min().min(), data.max().max(), 0.5), cm.vik, len(data.index)/240, "Heat content", "J/m2", [0]],
         }
         x_vals = np.linspace(0, len(data.index), len(data.index), dtype=int)
         y_vals = z_rev
@@ -422,6 +446,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.plot(X, df_snowh.values, '-k', linewidth=0.1)
         n=var_dict[var_name][2]
         plt.locator_params(axis='x', nbins=n)
+        plt.contour(cp, levels=var_dict[var_name][-1], colors='white')        
 
         plt.title(f'Cross Section of the changes in {var_name} for a pixel')
         plt.xlabel('Datetime')
