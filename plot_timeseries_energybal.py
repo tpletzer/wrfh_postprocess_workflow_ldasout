@@ -279,17 +279,62 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
         df_snowh, df_dz, df_var = prep.proc_xsection(save_dir)
 
-        
+
         #calculate each of the heights for each timestep
-        z_005 = df_snowh -0.05
-        z_010 = df_snowh -0.1
-        z_020 = df_snowh -0.2
-        z_050 = df_snowh -0.5
-        z_100 = df_snowh -1.0
-        z_200 = df_snowh -2.0
+        #z_005 = df_snowh -0.05
+        #z_010 = df_snowh -0.1
+        #z_020 = df_snowh -0.2
+        #z_050 = df_snowh -0.5
+        #z_100 = df_snowh -1.0
+        #z_200 = df_snowh -2.0
 
+        #dt = pd.DataFrame(columns=["0.05", "0.1", "0.2", "0.5", "1.0", "2.0"], index=z_005.index)
+
+        #for i in range(len(z_005)):
+            # print(z_005.iloc[i]) #target to interp to
+            #f = interpolate.interp1d(df_dz.iloc[i].values, df_var.iloc[i].values, bounds_error=False)
+            #t_005 = f(z_005.iloc[i])
+            #t_010 = f(z_010.iloc[i])
+            #t_020 = f(z_020.iloc[i])
+            #t_050 = f(z_050.iloc[i])
+            #t_100 = f(z_100.iloc[i])
+            #t_200 = f(z_200.iloc[i])
+            #dt.iloc[i] = pd.Series({'0.05':t_005, '0.1':t_010, '0.2':t_020, '0.5':t_050, '1.0':t_100, '2.0':t_200}, dtype=np.float64)
+
+        #dt = dt.astype(np.float64)
+        #dt = dt-273.15
+        
+        hsnow = hsnow.resample('H').mean()
+
+        hsnow["h_TC1"] = 0.05 + hsnow["hsnow"] #calculate height of sensor as snowpack melts
+        hsnow["h_TC2"] = 0.1 + hsnow["hsnow"]
+        hsnow["h_TC3"] = 0.2 + hsnow["hsnow"]
+        hsnow["h_TC4"] = 0.5 + hsnow["hsnow"]
+        hsnow["h_TC5"] = 1.0 + hsnow["hsnow"]
+        hsnow["h_TC6"] = 2.0 + hsnow["hsnow"]
+
+        hsnow["h_TC1"] = hsnow["h_TC1"].where(hsnow["h_TC1"]>=0.0, np.nan) #filter if sensor melts out
+        hsnow["h_TC2"] = hsnow["h_TC2"].where(hsnow["h_TC2"]>=0.0, np.nan)
+        hsnow["h_TC3"] = hsnow["h_TC3"].where(hsnow["h_TC3"]>=0.0, np.nan)
+        hsnow["h_TC4"] = hsnow["h_TC4"].where(hsnow["h_TC4"]>=0.0, np.nan)
+        hsnow["h_TC5"] = hsnow["h_TC5"].where(hsnow["h_TC5"]>=0.0, np.nan)
+        hsnow["h_TC6"] = hsnow["h_TC6"].where(hsnow["h_TC6"]>=0.0, np.nan)
+
+        df_dz = df_dz.loc[hsnow.index[0]:]
+        df_var = df_var.loc[hsnow.index[0]:]
+       
+        df_snowh = df_snowh.loc[hsnow.index[0]:]
+        df_snowh.index = df_snowh.index.tz_localize('UTC')
+        z_005 = df_snowh - hsnow["h_TC1"] #snow height of each sensor mapped to model
+        z_010 = df_snowh - hsnow["h_TC2"]
+        z_020 = df_snowh - hsnow["h_TC3"]
+        z_050 = df_snowh - hsnow["h_TC4"]
+        z_100 = df_snowh - hsnow["h_TC5"]
+        z_200 = df_snowh - hsnow["h_TC6"]
+
+        #interpolate for each sensor height in model
         dt = pd.DataFrame(columns=["0.05", "0.1", "0.2", "0.5", "1.0", "2.0"], index=z_005.index)
-
+        z_005 = z_005.loc[:df_snowh.index[-1]]
         for i in range(len(z_005)):
             # print(z_005.iloc[i]) #target to interp to
             f = interpolate.interp1d(df_dz.iloc[i].values, df_var.iloc[i].values, bounds_error=False)
@@ -304,26 +349,33 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         dt = dt.astype(np.float64)
         dt = dt-273.15
 
-        c["TC5_Avg"].loc["2021-12-15 18:00:00":"2021-12-16 19:30:00"] = c["TC5_Avg"].loc["2021-12-15 18:00:00":"2021-12-16 19:30:00"].where(c["TC5_Avg"]<-8.7, np.nan) #filter out weird meltwater spike
-        melt_index = np.argwhere( c["TC1_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].values>0.0)[0][0] #index where TC1 melts out
-        c["TC1_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"][melt_index:] = np.nan       
+        #c["TC5_Avg"].loc["2021-12-15 18:00:00":"2021-12-16 19:30:00"] = c["TC5_Avg"].loc["2021-12-15 18:00:00":"2021-12-16 19:30:00"].where(c["TC5_Avg"]<-8.7, np.nan) #filter out weird meltwater spike
+        #c["TC4_Avg"].loc["2021-12-15 18:00:00":"2021-12-16 19:30:00"] = c["TC4_Avg"].loc["2021-12-15 18:00:00":"2021-12-16 19:30:00"].where(c["TC4_Avg"]<-5.2, np.nan)
+        melt_index = np.argwhere(c["TC1_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].values>0.0)[0][0] #index where TC1 melts out
+        c["TC1_Avg"].loc["2021-12-01 00:00:00":][melt_index:] = np.nan       
+        
+        melt_index = np.argwhere(c["TC2_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].values>0.0)[0][0] #index where TC2 melts out
+        c["TC2_Avg"].loc["2021-12-01 00:00:00":][melt_index:] = np.nan
+
+        melt_index = np.argwhere(c["TC3_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].values>0.0)[0][0] #index where TC3 melts out
+        c["TC3_Avg"].loc["2021-12-01 00:00:00":][melt_index:] = np.nan
 
         plt.figure(figsize=(12,8))
         c["TC1_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.05_ob', color='red', linestyle='dotted')
         c["TC2_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.1_ob', color='orange', linestyle='dotted')
-        c["TC3_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.2_ob', color='yellow', linestyle='dotted')
-        c["TC4_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.5_ob', color='green', linestyle='dotted')
-        c["TC5_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='1.0_ob', color='blue', linestyle='dotted')
+        c["TC3_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.2_ob', color='green', linestyle='dotted')
+        c["TC4_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.5_ob', color='blue', linestyle='dotted')
+        c["TC5_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='1.0_ob', color='purple', linestyle='dotted')
         c["TC6_Avg"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='2.0_ob', color='brown', linestyle='dotted')
         dt["0.05"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.05_Croc', color='red')
         dt["0.1"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.1_Croc', color='orange')
-        dt["0.2"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.2_Croc', color='yellow')
-        dt["0.5"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.5_Croc', color='green')
-        dt["1.0"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='1.0_Croc', color='blue')
+        dt["0.2"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.2_Croc', color='green')
+        dt["0.5"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='0.5_Croc', color='blue')
+        dt["1.0"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='1.0_Croc', color='purple')
         dt["2.0"].loc["2021-12-01 00:00:00":"2021-12-31 23:00:00"].plot(label='2.0_Croc', color='brown')
         plt.axhline(y=0.0, color='k', linestyle='dotted', label='XTT')
         plt.title('Glacier Temperature')
-        plt.ylabel('T(K)')
+        plt.ylabel('T(C)')
         plt.legend(loc='upper left')
         plt.savefig(f'{save_dir}/timeseries_icetH_{station_name}.png')
         #plt.show()
@@ -387,70 +439,95 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.savefig(f'{save_dir}/timeseries_4panel_{station_name}.png')
 
     if plot_name=='xsect_top':
-        var_name="PSNOWTEMP"
-        df_snowh, df_dz, df_var = prep.proc_xsection(save_dir)
-        z = np.arange(df_snowh.values.max() - 0.5, df_snowh.values.max(), 0.01)
-        z = np.append(np.arange(df_snowh.values.max() - 3.5, df_snowh.values.max() - 0.5, 0.5), z)
-        #z = np.append(np.arange(49.9, df_snowh.values.max(), 0.0001), z)
-        z.sort()
-        z_rev = z
+        #var_name="PSNOWTEMP"
+        var_names = ["PSNOWTEMP", "PSNOWRHO", "PSNOWLIQ", "PSNOWHEAT"]
+        Z_list = []
+        cp_list = []
 
-        dt = pd.DataFrame(columns=["depths", "var"], index=df_dz.index)
-        dt2 = pd.DataFrame(columns=z_rev, index=df_dz.index)
+        for var_name in var_names[:2]:
+            df_snowh, df_dz, df_var = prep.proc_xsection(save_dir, station_name, var_name)
+            z = np.arange(df_snowh.values.max() - 0.1, df_snowh.values.max(), 0.001)
+            #z = np.arange(df_snowh.values.max() - 0.5, df_snowh.values.max(), 0.01)
+            z = np.append(np.arange(df_snowh.values.max() - 1.0, df_snowh.values.max() - 0.1, 0.5), z)
+            #z = np.append(np.arange(df_snowh.values.max() - 3.5, df_snowh.values.max() - 0.5, 0.5), z)
+            z.sort()
+            z_rev = z
 
-        for index, row in df_dz.iterrows(): #iterating over all of the timesteps
-            z_real = df_dz.loc[index].to_list() #extract the depth
-            #find index of the first element isnan
-            try:
-                nan_index = np.argwhere(np.isnan(z_real))[0][0]
-            except IndexError:
-                nan_index = -1 #this only happens when init run
-            #interp wants monotonically increasing z_real and no NaNs
-            z_real_rev = z_real[0:nan_index]
-            z_real_rev.reverse()
-            t_real_rev = df_var.loc[index][0:nan_index].to_list()
-            t_real_rev.reverse() #reverse is an in place operation
+            dt = pd.DataFrame(columns=["depths", "var"], index=df_dz.index)
+            dt2 = pd.DataFrame(columns=z_rev, index=df_dz.index)
 
-            f = interpolate.interp1d(z_real_rev, t_real_rev, bounds_error=False)
-            t = f(z_rev)
-            #t = np.interp(z_rev, z_real_rev, t_real_rev)
-            dt.loc[index] = pd.Series({'depths':z_rev, 'var':t})
-            for ind in range(len(t)):
-                dt2.loc[index][z_rev[ind]] = t[ind]
+            for index, row in df_dz.iterrows(): #iterating over all of the timesteps
+                z_real = df_dz.loc[index].to_list() #extract the depth
+                #find index of the first element isnan
+                try:
+                    nan_index = np.argwhere(np.isnan(z_real))[0][0]
+                except IndexError:
+                    nan_index = -1 #this only happens when init run
+                #interp wants monotonically increasing z_real and no NaNs
+                z_real_rev = z_real[0:nan_index]
+                z_real_rev.reverse()
+                t_real_rev = df_var.loc[index][0:nan_index].to_list()
+                t_real_rev.reverse() #reverse is an in place operation
+
+                f = interpolate.interp1d(z_real_rev, t_real_rev, bounds_error=False)
+                t = f(z_rev)
+                dt.loc[index] = pd.Series({'depths':z_rev, 'var':t})
+                for ind in range(len(t)):
+                    dt2.loc[index][z_rev[ind]] = t[ind]
         
-        data=dt2
-        var_dict = {
-        'PSNOWTEMP': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Temperature", "K", [273.15]],  #[levels, cmap, nbins, label, unit]
-        'PSNOWRHO': [np.arange(data.min().min(), data.max().max(), 0.5), cm.hawaii, len(data.index)/240, "Density", "kg/m3", [850]],
-        'PSNOWLIQ': [np.arange(data.min().min(), data.max().max(), 0.5), cm.vik, len(data.index)/240, "Liquid content", "mmwe", [0]],
-        'PSNOWHEAT': [np.arange(data.min().min(), data.max().max(), 0.5), cm.vik, len(data.index)/240, "Heat content", "J/m2", [0]],
-        }
-        x_vals = np.linspace(0, len(data.index), len(data.index), dtype=int)
-        y_vals = z_rev
-        # y_vals = np.linspace(0, len(z), len(z), dtype=int)
-        X, Y = np.meshgrid(x_vals, y_vals, indexing='ij')
-        Z = data.values
+            data=dt2
+            #var_dict = {
+            #'PSNOWTEMP': [np.arange(data.min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Temperature", "K", [273.15]],  #[levels, cmap, nbins, label, unit]
+            #'PSNOWRHO': [np.arange(data.min().min(), data.max().max(), 0.5), cm.hawaii, len(data.index)/240, "Density", "kg/m3", [850]],
+            #'PSNOWLIQ': [np.arange(data.min().min(), data.max().max(), 0.5), cm.vik, len(data.index)/240, "Liquid content", "mmwe", [0]],
+            #'PSNOWHEAT': [np.arange(data.min().min(), data.max().max(), 0.5), cm.vik, len(data.index)/240, "Heat content", "J/m2", [0]],
+            #}
+            x_vals = np.linspace(0, len(data.index), len(data.index), dtype=int)
+            y_vals = z_rev
+            # y_vals = np.linspace(0, len(z), len(z), dtype=int)
+            X, Y = np.meshgrid(x_vals, y_vals, indexing='ij')
+            Z = data.values
+            Z_list.append(Z)
         
+        #breakpoint()
+        #var_dict = {
+        #    'PSNOWTEMP': [np.arange(Z_list[r].min().min(), 274.0, 0.5), cm.vik, len(data.index)/240, "Temperature", "K", [273.15]],  #[levels, cmap, nbins, label, unit]
+        #    'PSNOWRHO': [np.arange(Z_list[r].min().min(), Z_list[r].max().max(), 0.5), cm.hawaii, len(data.index)/240, "Density", "kg/m3", [850]],
+        #    'PSNOWLIQ': [np.arange(Z_list[r].min().min(), Z_list[r].max().max(), 0.5), cm.vik, len(data.index)/240, "Liquid content", "mmwe", [0]],
+        #    'PSNOWHEAT': [np.arange(Z_list[r].min().min(), Z_list[r].max().max(), 0.5), cm.vik, len(data.index)/240, "Heat content", "J/m2", [0]],
+        #}
+        ftsize=14
+        fig, axs = plt.subplots(len(var_names[:2]), 1, sharex=True, figsize=(16,20))
+        fig.suptitle("Cross-sections at CWG AWS", fontsize=ftsize)
+    
+        for r in range(len(var_names[0:2])):
+            var_dict = {
+            'PSNOWTEMP': [1, cm.vik, 100, "Temperature", "K", [273.15]],  #[levels, cmap, nbins, label, unit]
+            'PSNOWRHO': [1, cm.hawaii, 100, "Density", "kg/m3", [850]],
+            'PSNOWLIQ': [1, cm.vik, 100, "Liquid content", "mmwe", [0]],
+            'PSNOWHEAT': [1, cm.vik, 100, "Heat content", "J/m2", [0]],
+            }
+            cp = axs[r].contourf(X, Y, Z_list[r], cmap=var_dict[var_names[r]][1])   #, levels=var_dict[var_names[r]][0])
+            fig.colorbar(cp, ax=axs[r], label=f'{var_dict[var_names[r]][3]} ({var_dict[var_names[r]][4]})')
+            axs[r].plot(X, df_snowh.values, '-k', linewidth=0.1)
+
         my_xticks = []
         for i in data.index.values:
             my_xticks.append(i)
         my_xticks2 = [re.sub(r'\:00\:00\.0+$', '', str(d)) for d in my_xticks]
-
-        plt.figure(figsize=(10,6))
-        plt.tight_layout()
-        plt.subplots_adjust(bottom=0.3)
-        #plt.yticks(list(range(0,len(z),1)), z)
+        
+        #plt.subplots_adjust(bottom=1.3)
         plt.xticks(list(range(0,len(data.index),1)), my_xticks2, rotation=45)
-        cp = plt.contourf(X, Y, Z, cmap=var_dict[var_name][1], levels=var_dict[var_name][0])
-        plt.colorbar(cp, label=f'{var_dict[var_name][3]} of snow ({var_dict[var_name][4]})')
-        plt.plot(X, df_snowh.values, '-k', linewidth=0.1)
         n=var_dict[var_name][2]
         plt.locator_params(axis='x', nbins=n)
-        plt.contour(cp, levels=var_dict[var_name][-1], colors='white')        
+        plt.subplots_adjust(top=0.934, bottom=0.145, left=0.063, right=0.99, hspace=0.19, wspace=0.2)
+        fig.supylabel('Height (m)')
+        #fig.supxlabel('Datetime (UTC)')
+        #plt.contour(cp, levels=var_dict[var_name][-1], colors='white')        
 
-        plt.title(f'Cross Section of the changes in {var_name} for a pixel')
-        plt.xlabel('Datetime')
-        plt.ylabel('Height (m)')
+        #plt.title(f'Cross Section of the changes in {var_name} for a pixel')
+        #plt.xlabel('Datetime')
+        #plt.ylabel('Height (m)')
         plt.savefig(f'{save_dir}/timeseries_xsect_top_{station_name}.png', bbox_inches='tight')
     plt.close(plt.figure())
 
