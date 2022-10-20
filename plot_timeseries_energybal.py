@@ -438,6 +438,87 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         axs[1, 1].invert_yaxis()
         plt.savefig(f'{save_dir}/timeseries_4panel_{station_name}.png')
 
+    if plot_name=='xsect_top2':
+        var_names = ["PSNOWTEMP", "PSNOWRHO", "PSNOWLIQ", "PSNOWHEAT"]
+        Z_list = []
+        cp_list = []
+
+        for var_name in var_names[2:]:
+            df_snowh, df_dz, df_var = prep.proc_xsection(save_dir, station_name, var_name)
+            z = np.arange(df_snowh.values.max() - 0.1, df_snowh.values.max(), 0.001)
+            #z = np.arange(df_snowh.values.max() - 0.5, df_snowh.values.max(), 0.01)
+            z = np.append(np.arange(df_snowh.values.max() - 1.0, df_snowh.values.max() - 0.1, 0.5), z)
+            #z = np.append(np.arange(df_snowh.values.max() - 3.5, df_snowh.values.max() - 0.5, 0.5), z)
+            z.sort()
+            z_rev = z
+
+            dt = pd.DataFrame(columns=["depths", "var"], index=df_dz.index)
+            dt2 = pd.DataFrame(columns=z_rev, index=df_dz.index)
+
+            for index, row in df_dz.iterrows(): #iterating over all of the timesteps
+                z_real = df_dz.loc[index].to_list() #extract the depth
+                #find index of the first element isnan
+                try:
+                    nan_index = np.argwhere(np.isnan(z_real))[0][0]
+                except IndexError:
+                    nan_index = -1 #this only happens when init run
+                #interp wants monotonically increasing z_real and no NaNs
+                z_real_rev = z_real[0:nan_index]
+                z_real_rev.reverse()
+                t_real_rev = df_var.loc[index][0:nan_index].to_list()
+                t_real_rev.reverse() #reverse is an in place operation
+
+                f = interpolate.interp1d(z_real_rev, t_real_rev, bounds_error=False)
+                t = f(z_rev)
+                dt.loc[index] = pd.Series({'depths':z_rev, 'var':t})
+                for ind in range(len(t)):
+                    dt2.loc[index][z_rev[ind]] = t[ind]
+        
+            data=dt2
+            x_vals = np.linspace(0, len(data.index), len(data.index), dtype=int)
+            y_vals = z_rev
+            X, Y = np.meshgrid(x_vals, y_vals, indexing='ij')
+            Z = data.values
+            Z_list.append(Z)
+        
+        ftsize=14
+        fig, axs = plt.subplots(len(var_names[2:]), 1, sharex=True, figsize=(16,20))
+        fig.suptitle("Cross-sections at CWG AWS", fontsize=ftsize)
+    
+        for r in range(len(var_names[2:])):
+            r+=2 #2,3
+            l_ax = r-2 # 0,1 for axes
+            var_dict = {
+            'PSNOWTEMP': [1, cm.vik, 100, "Temperature", "K", [273.15]],  #[levels, cmap, nbins, label, unit]
+            'PSNOWRHO': [1, cm.hawaii, 100, "Density", "kg/m3", [850]],
+            'PSNOWLIQ': [1, cm.vik, 100, "Liquid content", "mmwe", [0]],
+            'PSNOWHEAT': [1, cm.vik, 100, "Heat content", "J/m2", [0]],
+            }
+            #print(r)
+            #breakpoint()
+            x = Z_list[l_ax][~pd.isnull(Z_list[l_ax])]
+            min_z = x.min()
+            max_z = x.max()
+            step_z = (max_z - min_z)/100.
+            lev = np.arange(min_z, max_z+(2*step_z), step_z)
+            cp = axs[l_ax].contourf(X, Y, Z_list[l_ax], cmap=var_dict[var_names[r]][1], levels=lev) #levels=var_dict[var_names[r]][0])
+            fig.colorbar(cp, ax=axs[l_ax], label=f'{var_dict[var_names[r]][3]} ({var_dict[var_names[r]][4]})')
+            axs[l_ax].plot(X, df_snowh.values, '-k', linewidth=0.1)
+
+        my_xticks = []
+        for i in data.index.values:
+            my_xticks.append(i)
+        my_xticks2 = [re.sub(r'\:00\:00\.0+$', '', str(d)) for d in my_xticks]
+        
+        plt.xticks(list(range(0,len(data.index),1)), my_xticks2, rotation=45)
+        n=var_dict[var_name][2]
+        plt.locator_params(axis='x', nbins=n)
+        plt.subplots_adjust(top=0.934, bottom=0.145, left=0.063, right=0.99, hspace=0.19, wspace=0.2)
+        fig.supylabel('Height (m)')
+
+        plt.savefig(f'{save_dir}/timeseries_xsect_top2_{station_name}.png', bbox_inches='tight')
+    plt.close(plt.figure())
+
     if plot_name=='xsect_top':
         #var_name="PSNOWTEMP"
         var_names = ["PSNOWTEMP", "PSNOWRHO", "PSNOWLIQ", "PSNOWHEAT"]
@@ -507,10 +588,16 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
             'PSNOWLIQ': [1, cm.vik, 100, "Liquid content", "mmwe", [0]],
             'PSNOWHEAT': [1, cm.vik, 100, "Heat content", "J/m2", [0]],
             }
-            cp = axs[r].contourf(X, Y, Z_list[r], cmap=var_dict[var_names[r]][1])   #, levels=var_dict[var_names[r]][0])
+            x = Z_list[r][~pd.isnull(Z_list[r])]
+            min_z = x.min()
+            max_z = x.max()
+            step_z = (max_z - min_z)/100.
+            #new_max = max_z + (max_z - min_z)/50
+            lev = np.arange(min_z, max_z + (2*step_z), step_z)
+
+            cp = axs[r].contourf(X, Y, Z_list[r], cmap=var_dict[var_names[r]][1], levels=lev)   #, levels=var_dict[var_names[r]][0])
             fig.colorbar(cp, ax=axs[r], label=f'{var_dict[var_names[r]][3]} ({var_dict[var_names[r]][4]})')
             axs[r].plot(X, df_snowh.values, '-k', linewidth=0.1)
-
         my_xticks = []
         for i in data.index.values:
             my_xticks.append(i)
@@ -529,7 +616,6 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         #plt.xlabel('Datetime')
         #plt.ylabel('Height (m)')
         plt.savefig(f'{save_dir}/timeseries_xsect_top_{station_name}.png', bbox_inches='tight')
-    plt.close(plt.figure())
 
 if __name__ == "__main__":
     defopt.run(plot_timeseries)

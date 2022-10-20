@@ -9,6 +9,7 @@ import numpy as np
 fid_dict = {
     'terminus': [227, 198],  #[i, j]
     'cwg': [219, 207],   # [217, 211],
+    'cwg_i': [220,207],
     'highelv': [209, 220],
     'soil': [208, 195],
     }

@@ -1,5 +1,5 @@
-file_dir: /nesi/nobackup/uoo03104/Taylor200_coldglac_2122_aws/NWM
-save_dir: /nesi/nobackup/uoo03104/Taylor200_coldglac_2122_aws/NWM
+file_dir: /nesi/nobackup/uoo03104/Taylor200_coldglac_2122/NWM
+save_dir: /nesi/nobackup/uoo03104/Taylor200_coldglac_2122/NWM
 station_names: cwg
-plot_names: [precip, albedo, snowheight, massbal, energybal, icetD, icetH, flow, 4panel, xsect_top, melt]
+plot_names: [precip, albedo, snowheight, massbal, energybal, icetD, icetH, flow, 4panel, xsect_top2, xsect_top, melt]
 date: 2021-12-01\ 00:00:00
