@@ -57,6 +57,9 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
     precip[precip < 0.] = 0.
     precip = precip *100. #convert to swe using 250kg/m3 density
     precip = precip.resample('H').ffill()
+
+    daily_sfcheight = hsnow[time_mask].diff()["hsnow"].cumsum()
+    daily_sfcheight.loc["2021-12-02 00:00:00+00:00"] = 0.0
     
     SWin = c["incommingSW_Avg"].resample('D').sum()
     SWout = c["outgoingSW_Avg"].resample('D').sum()
@@ -111,11 +114,11 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
     if plot_name=='snowheight':
         plt.figure(figsize=[12, 7])
-        hsnow["hsnow"].plot(label='obs')
+        daily_sfcheight.plot(label='obs')
         #cohm["hsnow(obs,m)_scaled"].plot(label='obs')
         hsnow_m["SNOWH_scaled"].plot(label='model')
         plt.title('Surface height')
-        plt.ylabel('snowh (mm)')
+        plt.ylabel('surface height (m)')
         plt.legend(loc='upper right')
         plt.savefig(f'{save_dir}/timeseries_snowheight_{station_name}.png')
         #plt.show()
