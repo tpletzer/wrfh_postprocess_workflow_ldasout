@@ -49,6 +49,13 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
     psnowheight = []
     psnowtotswe = []
     psndrift = []
+    emiss = []
+    tg = []
+    trad = []
+    tgb = []
+    t2mb = []
+    q2mb = []    
+
 
     snowliq = {}
     snowswe = {}
@@ -115,6 +122,12 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
         psnowheight.append(ds['PSNOWHEIGHT'][:,pix_j,pix_i].values)
         psnowtotswe.append(ds['PSNOWTOTSWE'][:,pix_j,pix_i].values)
         psndrift.append(ds['PSNOWSUBL'][:,pix_j,pix_i].values)
+        emiss.append(ds['EMISS'][:,pix_j,pix_i].values)
+        tg.append(ds['TG'][:,pix_j,pix_i].values)
+        trad.append(ds['TRAD'][:,pix_j,pix_i].values)
+        tgb.append(ds['TGB'][:,pix_j,pix_i].values)
+        t2mb.append(ds['T2MB'][:,pix_j,pix_i].values)
+        q2mb.append(ds['Q2MB'][:,pix_j,pix_i].values)
 
         for l in range(lev_size):
             snowliq[l].append(ds['PSNOWLIQ'][:,pix_j,l,pix_i].values)
@@ -139,10 +152,10 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
     lst = []
     comp = [swdown, albedo, lwdown, fira, fsa, sag, lh, grdflx, hfx, rainrate, ugdrnoff, accprecip, 
             snowh, sneqv, qsnow, acsnow, acsnom, qrain, flow_ice, flow_snow, glacierthickness, psnowthrufal, 
-            psnowheight, psnowtotswe, psndrift]
+            psnowheight, psnowtotswe, psndrift, emiss, tg, trad, tgb, t2mb, q2mb]
     col_names = ["SWFORC", "ALBEDO", "LWFORC", "FIRA", "FSA", "SAG", "LH", "GRDFLX", "HFX", "RAINRATE", "UGDRNOFF", 
                 "ACCPRCP", "SNOWH", "SNEQV", "QSNOW", "ACSNOW", "ACSNOM", "QRAIN", "FLOW_ICE", "FLOW_SNOW", "glacier_thickness", 
-                "PSNOWTHRUFAL", "PSNOWHEIGHT", "PSNOWTOTSWE", "PSNDRIFT"]
+                "PSNOWTHRUFAL", "PSNOWHEIGHT", "PSNOWTOTSWE", "PSNDRIFT", "EMISS", "TG", "TRAD", "TGB", "T2MB", "Q2MB"]
 
     for l in range(lev_size):
         col_names.append(f'PSNOWLIQ{l}')
