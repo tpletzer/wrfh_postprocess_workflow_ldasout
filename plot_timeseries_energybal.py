@@ -88,7 +88,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
     #df["subl"] = (en["LH"]*(3600/2838200))
 
     if plot_name=='precip':
-        plt.figure()
+        plt.figure(figsize=[12, 7])
         precip.plot(label='obs')
         #cohm["precip(obs,mmwe)"].plot(label='obs')
         df["ACCPRCP"].loc[df.index >= '2021-12-01 13:00:00'].plot(label='model')
@@ -99,7 +99,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         #plt.show()
 
     if plot_name=='albedo':
-        plt.figure()
+        plt.figure(figsize=[12, 7])
         Alb.loc[Alb.index >= '2021-12-02 00:00:00'].plot(label='obs')
         #cohm_aws["Albedo(obs,-)"].plot(label='obs')
         df["ALBEDO"].loc[df.index >= '2021-12-01 13:00:00'].plot(label='model')
@@ -110,7 +110,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         #plt.show()
 
     if plot_name=='snowheight':
-        plt.figure()
+        plt.figure(figsize=[12, 7])
         hsnow["hsnow"].plot(label='obs')
         #cohm["hsnow(obs,m)_scaled"].plot(label='obs')
         hsnow_m["SNOWH_scaled"].plot(label='model')
@@ -121,7 +121,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         #plt.show()
 
     if plot_name=='icetemp':
-        plt.figure()
+        plt.figure(figsize=[12, 7])
         df["PSNOWTEMP0"].plot(label='icetemp0')
         df["PSNOWTEMP1"].plot(label='icetemp1')
         plt.title('Glacier Temperature')
@@ -143,7 +143,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
     # #plt.show()
 
     if plot_name=='massbal':
-        plt.figure()
+        plt.figure(figsize=[12, 7])
         df["CUMSUM_ACSNOM"].plot(label="runoff")
         df["CUMSUM_subl"].plot(label="sublimation")
         df["CUMSUM_subldrift"].plot(label="sublimation_drift")
@@ -162,7 +162,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
     df_rph = (df.filter(regex=r"PSNOWRPH").sum(axis=1))/3600 #J/m2 to W/m2
     df_mph = (df.filter(regex=r"PSNOWMPH").sum(axis=1))/3600 #J/m2 to W/m2
-    df_swp = (df.filter(regex=r"PSNOWSWP").sum(axis=1))/3600 #J/m2 to W/m2
+    df_swp = (df.filter(regex=r"PSNOWSWP").sum(axis=1)) #W/m2
 
     
     #calculate heat content in W/m2
@@ -226,7 +226,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.savefig(f'{save_dir}/timeseries_melt_{station_name}.png')
     
     if plot_name=='heatcontent':
-        plt.figure()
+        plt.figure(figsize=[12, 7])
         df_sum["HEATCONTENT"].plot(label="heat content")
         plt.title('Heat Content')
         plt.ylabel('Heat content (W/m2)')
@@ -234,7 +234,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.savefig(f'{save_dir}/timeseries_heatcontent_{station_name}.png')
 
     if plot_name=='phasechange':
-        plt.figure()
+        plt.figure(figsize=[12, 7])
         df_sum["PHASECHANGE"].plot(label="phase change")
         plt.title('Phase change energy')
         plt.ylabel('Phase change (W/m2)')
@@ -271,7 +271,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
         dt = dt.astype(np.float64)
         dt = dt.resample('d').mean()
-        plt.figure()
+        plt.figure(figsize=[12, 7])
         dt.plot()
         plt.savefig(f'{save_dir}/timeseries_icetD_{station_name}.png')
 
