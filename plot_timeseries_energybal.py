@@ -66,6 +66,14 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
     Alb = SWout/SWin
     Alb = Alb.resample('H').ffill()
 
+    lwd = c["incomingLW_Avg"].loc["2021-12-01 13:00:00+00:00":"2022-01-01 00:00:00+00:00"]
+    lwu = c["outgoingLW_Avg"].loc["2021-12-01 13:00:00+00:00":"2022-01-01 00:00:00+00:00"]
+    airT = c["AirTC_Avg"] + 273.15
+    airT = airT.loc["2021-12-01 13:00:00+00:00":"2022-01-01 00:00:00+00:00"]
+    sigma = 5.67e-8
+    eps = 0.98
+    tsfc_1 = ((1/sigma)*lwu)**(0.25)
+    tsfc_98 = ((1/(eps*sigma))*(lwu - lwd + (eps*lwd)))**(0.25)
 
     df = pd.read_csv(f'{save_dir}/timeseries_ldasout_{station_name}.csv', index_col=0)
     df.index = pd.to_datetime(df.index)
@@ -89,6 +97,27 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
     #en = pd.read_csv('../energybal/middle_energybal.csv', index_col=0)
     #en.index = en.index.tz_localize('UTC')
     #df["subl"] = (en["LH"]*(3600/2838200))
+    if plot_name=='albdiognosis':
+        df2 = df["2021-12-01 13:00:00+00:00":]
+        ftsize=14
+        fig, axs = plt.subplots(3, 1, sharex=True, figsize=(18,14))
+        fig.suptitle('Albedo Comparison', fontsize=ftsize) 
+        axs[0].plot(df2.index, df2["ALBEDO"], color="grey", label="albedo")
+        axs[0].legend(loc="upper right")
+        axs[1].plot(df2.index, df2["PSNOWRHO0"], color='blue', label='density')
+        axs[1].legend(loc="upper right")
+        axs[2].plot(df2.index, hsnow_m["SNOWH_scaled"], color='orange', label="snow height")
+        axs[2].legend(loc="upper right")
+        plt.legend()
+        plt.savefig(f'{save_dir}/timeseries_albdiognosis_{station_name}.png')
+
+    if plot_name=='tsfc':
+        plt.figure(figsize=[12,7])
+        (tsfc_98.resample('H').mean()).plot(label="obs")
+        df["TG"].loc[df["TG"] >= "2021-12-01 13:00:00:00"].plot(label='model')
+        plt.title("Surface Temperature")
+        plt.legend(loc="upper right")
+        plt.savefig(f'{save_dir}/timeseries_tsfc_{station_name}.png')
 
     if plot_name=='precip':
         plt.figure(figsize=[12, 7])
