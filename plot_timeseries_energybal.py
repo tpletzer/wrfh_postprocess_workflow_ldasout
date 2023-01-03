@@ -221,6 +221,15 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
     df['LH'] = -1*df['LH']
     df['HFX'] = -1*df['HFX']
     df['GRDFLX'] = -1*df['GRDFLX']
+    
+    eddy = pd.read_csv('/nesi/nobackup/uoo03104/validation_data/eddypro_COHM_2021_full_output_2022-05-31T164638_exp.csv',header=0, skiprows=[0,2])
+    eddy.index = eddy['date'].str.cat(eddy['time'],sep=" ")
+    eddy.index = pd.to_datetime(eddy.index).tz_localize('Antarctica/Mcmurdo').tz_convert('UTC')
+    eddy.H = eddy.H.replace(-9999.00000,np.nan)
+    eddy.H = -1*eddy.H
+    eddy.H = eddy["H"].rolling(6).mean()
+    eddy = eddy.shift(1,freq='D')
+    eddy = eddy.loc[df.index[0]:df.index[-1]]
 
 
     if plot_name=='energybal':
@@ -244,6 +253,16 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
         plt.legend(loc='upper right')
         plt.ylim([-300., 450.])
         plt.savefig(f'{save_dir}/timeseries_energybal_{station_name}.png')
+
+    if plot_name=='heatflux':
+        plt.figure(figsize=[12, 8])
+        df["HFX"].plot(label="modelled", linewidth=0.7)
+        eddy["H"].plot(label="observed", linewidth=0.7)
+        plt.title(f'Sensible heat flux for {station_name}',fontsize=18)
+        plt.ylabel('Energy (W/m2)', fontsize=14)
+        plt.xlabel(f'Datetime (UTC)')
+        plt.legend(loc='upper right')
+        plt.savefig(f'{save_dir}/timeseries_heatflux_{station_name}.png')
 
     if plot_name=='melt':
         plt.figure(figsize=[12, 8])
