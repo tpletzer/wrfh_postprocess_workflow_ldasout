@@ -114,7 +114,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
     if plot_name=='tsfc':
         plt.figure(figsize=[12,7])
         (tsfc_98.resample('H').mean()).plot(label="obs")
-        df["TG"].loc[df["TG"] >= "2021-12-01 13:00:00:00"].plot(label='model')
+        df["TG"].plot(label='model')
         plt.title("Surface Temperature")
         plt.legend(loc="upper right")
         plt.savefig(f'{save_dir}/timeseries_tsfc_{station_name}.png')

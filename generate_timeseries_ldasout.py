@@ -54,7 +54,8 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
     trad = []
     tgb = []
     t2mb = []
-    q2mb = []    
+    q2mb = []
+    snowalb = []    
 
 
     snowliq = {}
@@ -68,6 +69,9 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
     snowmph = {}
     snowmelt = {}
     snowswp = {}     
+    snowgran1 = {}
+    snowgran2 = {}
+    snowage = {}
 
     test = xr.open_dataset(files[0],decode_times=False)
     lev_size = test['glacier_levels'].values.size
@@ -83,7 +87,10 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
         snowrph[lev] = []
         snowmph[lev] = []
         snowmelt[lev] = []
-        snowswp[lev] = []
+        snowswp[lev] = [] 
+        snowgran1[lev] = []
+        snowgran2[lev] = []
+        snowage[lev] = []
 
     snliq = {}
     snice = {}
@@ -128,6 +135,7 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
         tgb.append(ds['TGB'][:,pix_j,pix_i].values)
         t2mb.append(ds['T2MB'][:,pix_j,pix_i].values)
         q2mb.append(ds['Q2MB'][:,pix_j,pix_i].values)
+        snowalb.append(ds['PSNOWALB'][:,pix_j,pix_i].values)
 
         for l in range(lev_size):
             snowliq[l].append(ds['PSNOWLIQ'][:,pix_j,l,pix_i].values)
@@ -141,6 +149,9 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
             snowmph[l].append(ds['PSNOWMPH'][:,pix_j,l,pix_i].values)
             snowmelt[l].append(ds['PSNOWMELT'][:,pix_j,l,pix_i].values)
             snowswp[l].append(ds['PSNOWSWP'][:,pix_j,l,pix_i].values)    
+            snowgran1[l].append(ds['PSNOWGRAN1'][:,pix_j,l,pix_i].values)
+            snowgran2[l].append(ds['PSNOWGRAN2'][:,pix_j,l,pix_i].values)
+            snowage[l].append(ds['PSNOWAGE'][:,pix_j,l,pix_i].values)
 
         for l1 in range(3):
             snliq[l1].append(ds['SNLIQ'][:,pix_j,l1,pix_i].values)
@@ -152,10 +163,10 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
     lst = []
     comp = [swdown, albedo, lwdown, fira, fsa, sag, lh, grdflx, hfx, rainrate, ugdrnoff, accprecip, 
             snowh, sneqv, qsnow, acsnow, acsnom, qrain, flow_ice, flow_snow, glacierthickness, psnowthrufal, 
-            psnowheight, psnowtotswe, psndrift, emiss, tg, trad, tgb, t2mb, q2mb]
+            psnowheight, psnowtotswe, psndrift, emiss, tg, trad, tgb, t2mb, q2mb, snowalb]
     col_names = ["SWFORC", "ALBEDO", "LWFORC", "FIRA", "FSA", "SAG", "LH", "GRDFLX", "HFX", "RAINRATE", "UGDRNOFF", 
                 "ACCPRCP", "SNOWH", "SNEQV", "QSNOW", "ACSNOW", "ACSNOM", "QRAIN", "FLOW_ICE", "FLOW_SNOW", "glacier_thickness", 
-                "PSNOWTHRUFAL", "PSNOWHEIGHT", "PSNOWTOTSWE", "PSNDRIFT", "EMISS", "TG", "TRAD", "TGB", "T2MB", "Q2MB"]
+                "PSNOWTHRUFAL", "PSNOWHEIGHT", "PSNOWTOTSWE", "PSNDRIFT", "EMISS", "TG", "TRAD", "TGB", "T2MB", "Q2MB", "PSNOWALB"]
 
     for l in range(lev_size):
         col_names.append(f'PSNOWLIQ{l}')
@@ -169,6 +180,10 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
         col_names.append(f'PSNOWMPH{l}')
         col_names.append(f'PSNOWMELT{l}')
         col_names.append(f'PSNOWSWP{l}')
+        col_names.append(f'PSNOWGRAN1_{l}')
+        col_names.append(f'PSNOWGRAN2_{l}')
+        col_names.append(f'PSNOWAGE{l}')
+
 
         comp.append(snowliq[l])
         comp.append(snowswe[l])
@@ -181,6 +196,10 @@ def LDASOUT_energybal_todf(*, file_dir: str='/nesi/project/uoo03104/code/wrf_hyd
         comp.append(snowmph[l])
         comp.append(snowmelt[l])
         comp.append(snowswp[l])
+        comp.append(snowgran1[l])
+        comp.append(snowgran2[l])
+        comp.append(snowage[l])
+
 
     for l1 in range(3):
         col_names.append(f'SNLIQ{l1}')
