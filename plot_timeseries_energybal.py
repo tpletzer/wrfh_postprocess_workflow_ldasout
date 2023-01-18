@@ -74,6 +74,8 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
     eps = 0.98
     tsfc_1 = ((1/sigma)*lwu)**(0.25)
     tsfc_98 = ((1/(eps*sigma))*(lwu - lwd + (eps*lwd)))**(0.25)
+    icetemp = tsfc_98.resample('H').mean()
+    icetemp[icetemp>273.15] = 273.15 #to match obs to croc
 
     df = pd.read_csv(f'{save_dir}/timeseries_ldasout_{station_name}.csv', index_col=0)
     df.index = pd.to_datetime(df.index)
@@ -113,7 +115,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
 
     if plot_name=='tsfc':
         plt.figure(figsize=[12,7])
-        (tsfc_98.resample('H').mean()).plot(label="obs")
+        icetemp.plot(label="obs")
         df["TG"].plot(label='model')
         plt.title("Surface Temperature")
         plt.legend(loc="upper right")
