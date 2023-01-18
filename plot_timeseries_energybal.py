@@ -651,6 +651,7 @@ def plot_timeseries(*, save_dir: str='/nesi/project/uoo03104/snakemake_output/Ta
             cp = axs[r].contourf(X, Y, Z_list[r], cmap=var_dict[var_names[r]][1], levels=lev)   #, levels=var_dict[var_names[r]][0])
             fig.colorbar(cp, ax=axs[r], label=f'{var_dict[var_names[r]][3]} ({var_dict[var_names[r]][4]})')
             axs[r].plot(X, df_snowh.values, '-k', linewidth=0.1)
+            axs[r].contour(cp, levels=var_dict[var_names[r]][-1], colors='white') #plot contour ice and melting point
         my_xticks = []
         for i in data.index.values:
             my_xticks.append(i)
